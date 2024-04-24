@@ -11,6 +11,7 @@ use aksafan\fcm\source\helpers\ErrorsHelper;
 use aksafan\fcm\source\responses\AbstractResponse;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Promise;
 use InvalidArgumentException;
 
 /**
@@ -49,16 +50,16 @@ class ApiV1Request extends AbstractRequest implements Request
     }
 
     /**
-     * Sets target (token|topic|condition) and its value.
+     * Sets target (token|tokens|topic|condition) and its value.
      *
      * @param string $target
-     * @param string $value
+     * @param string|array $value
      *
      * @return Request
      */
     public function setTarget(string $target, $value): Request
     {
-        $this->getOptionBuilder()->setTarget($target, (string) $value);
+        $this->getOptionBuilder()->setTarget($target, $value);
 
         return $this;
     }
@@ -163,6 +164,39 @@ class ApiV1Request extends AbstractRequest implements Request
     }
 
     /**
+     * Sends POST request
+     *
+     * @return AbstractResponse[]
+     *
+     * @throws \Exception
+     */
+    public function sendAsync(): array
+    {
+        $options = $this->getOptionBuilder()->build();
+        $promises = [];
+
+        foreach ($options as $option) {
+            print_r($option);
+            try {
+                $promises[] = $this->getHttpClient()->requestAsync(self::POST, $this->getUrl(), $this->getSendMessageOptions($option));
+            } catch (ClientException $e) {
+                \Yii::error(ErrorsHelper::getGuzzleClientExceptionMessage($e), ErrorsHelper::GUZZLE_HTTP_CLIENT);
+            } catch (GuzzleException $e) {
+                \Yii::error(ErrorsHelper::getGuzzleExceptionMessage($e), ErrorsHelper::GUZZLE_HTTP_CLIENT);
+            }
+        }
+
+        $responses = Promise\Utils::settle($promises)->wait();
+
+        $result = [];
+        foreach ($responses as $response) {
+            $result[] = $this->getResponse()->handleResponse($response);
+        }
+
+        return $result;
+    }
+
+    /**
      * Builds the headers for the request.
      *
      * @return array
@@ -217,13 +251,13 @@ class ApiV1Request extends AbstractRequest implements Request
      *
      * @return array
      */
-    private function getSendMessageOptions(): array
+    private function getSendMessageOptions($messageOptions): array
     {
         return [
             'headers' => $this->getHeaders(),
             'json' => [
                 'validate_only' => $this->getOptionBuilder()->getValidateOnly(),
-                'message' => $this->getOptionBuilder()->build(),
+                'message' => $messageOptions,
             ],
         ];
     }

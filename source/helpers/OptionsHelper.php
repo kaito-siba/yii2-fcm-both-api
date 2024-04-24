@@ -154,11 +154,11 @@ final class OptionsHelper
      * @link https://firebase.google.com/docs/cloud-messaging/admin/send-messages#send_to_a_topic
      *
      * @param string $target
-     * @param string $value
+     * @param string|array $value
      *
      * @throws InvalidArgumentException
      */
-    public static function validateApiV1Target(string $target, string $value)
+    public static function validateApiV1Target(string $target, $value)
     {
         switch ($target) {
             case MessageOptionsBuilder::TOPIC_CONDITION:
@@ -168,6 +168,7 @@ final class OptionsHelper
                 self::validateTopicValue($value);
                 break;
             case MessageOptionsBuilder::TOKEN:
+            case MessageOptionsBuilder::TOKENS:
                 break;
             default:
                 throw new InvalidArgumentException('Invalid target type "'.$target.'", valid type: "'.implode(', ', MessageOptionsBuilder::TYPES));

@@ -19,11 +19,13 @@ class MessageOptionsBuilder implements OptionsBuilder
 {
     const TOPIC_CONDITION = 'condition';
     const TOKEN = 'token';
+    const TOKENS = 'tokens';
     const TOPIC = 'topic';
 
     const TYPES = [
         self::TOPIC_CONDITION,
         self::TOKEN,
+        self::TOKENS,
         self::TOPIC,
     ];
 
@@ -63,17 +65,17 @@ class MessageOptionsBuilder implements OptionsBuilder
     private static $target;
 
     /**
-     * @var string
+     * @var string|array
      */
     private static $targetValue;
 
     /**
      * @param string $target One of "condition", "token", "topic" (see constants of current class)
-     * @param string $value
+     * @param string|array $value
      *
      * @throws InvalidArgumentException
      */
-    public function setTarget(string $target, string $value)
+    public function setTarget(string $target, $value)
     {
         OptionsHelper::validateApiV1Target($target, $value);
         self::$target = $target;
@@ -144,11 +146,18 @@ class MessageOptionsBuilder implements OptionsBuilder
     }
 
     /**
-     * @return null|string
+     * @return array
      */
-    public static function getToken()
+    public static function getTokens(): array
     {
-        return self::TOKEN === self::getTarget() ? self::getTargetValue() : null;
+        if (self::TOKENS === self::getTarget()) {
+            return \is_array(self::getTargetValue()) ? self::getTargetValue() : [];
+        }
+        if (self::TOKEN === self::getTarget()) {
+            return [self::getTargetValue()];
+        }
+
+        return [];
     }
 
     /**
@@ -174,13 +183,28 @@ class MessageOptionsBuilder implements OptionsBuilder
      */
     public function build(): array
     {
-        return array_filter([
-            self::getTarget() => self::getTargetValue(),
-            'data' => $this->data,
-            'notification' => $this->notification,
-            'android' => $this->androidConfig,
-            'apns' => $this->apnsConfig,
-            'webpush' => $this->webPushConfig,
-        ]);
+        if (self::getTarget() === self::TOKENS) {
+            $options = [];
+            foreach (self::getTokens() as $token) {
+                $options[] = array_filter([
+                    'token' => $token,
+                    'data' => $this->data,
+                    'notification' => $this->notification,
+                    'android' => $this->androidConfig,
+                    'apns' => $this->apnsConfig,
+                    'webpush' => $this->webPushConfig,
+                ]);
+            }
+            return $options;
+        } else {
+            return array_filter([
+                self::getTarget() => self::getTargetValue(),
+                'data' => $this->data,
+                'notification' => $this->notification,
+                'android' => $this->androidConfig,
+                'apns' => $this->apnsConfig,
+                'webpush' => $this->webPushConfig,
+            ]);
+        }
     }
 }
