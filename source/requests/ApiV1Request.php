@@ -37,13 +37,14 @@ class ApiV1Request extends AbstractRequest implements Request
      *
      * @param array $apiParams
      * @param string $reason
+     * @param array $guzzleConfig
      *
      * @throws \Exception
      */
-    public function __construct(array $apiParams, string $reason)
+    public function __construct(array $apiParams, string $reason, array $guzzleConfig = [])
     {
         $this->serviceAccount = new ServiceAccount($apiParams['privateKey']);
-        $this->setHttpClient($this->serviceAccount->authorize(self::FCM_AUTH_URL));
+        $this->setHttpClient($this->serviceAccount->authorize(self::FCM_AUTH_URL, $guzzleConfig));
         $this->setReason($reason);
         $this->optionBuilder = StaticBuilderFactory::build($reason, $this);
     }

@@ -48,12 +48,13 @@ class LegacyApiRequest extends AbstractRequest implements Request, GroupManageme
      *
      * @param array $apiParams
      * @param string $reason
+     * @param array $guzzleConfig
      */
-    public function __construct(array $apiParams, string $reason)
+    public function __construct(array $apiParams, string $reason, array $guzzleConfig = [])
     {
         $this->serverKey = $apiParams['serverKey'];
         $this->senderId = $apiParams['senderId'];
-        $this->setHttpClient(new Client());
+        $this->setHttpClient(new Client($guzzleConfig));
         $this->setReason($reason);
         $this->optionBuilder = StaticBuilderFactory::build($reason, $this);
     }
