@@ -49,14 +49,15 @@ class ServiceAccount
      * Authorizes an http request.
      *
      * @param array|string $scope Scope of the requested credentials @see https://developers.google.com/identity/protocols/googlescopes
+     * @param array $guzzleConfig
      *
      * @return ClientInterface|\GuzzleHttp\Client
      *
      * @throws \Exception
      */
-    public function authorize($scope)
+    public function authorize($scope, array $guzzleConfig = [])
     {
-        return CredentialsLoader::makeHttpClient($this->getCredentials($scope));
+        return CredentialsLoader::makeHttpClient($this->getCredentials($scope), $guzzleConfig);
     }
 
     /**
