@@ -20,16 +20,17 @@ final class StaticRequestFactory
      * @param string $apiVersion
      * @param array $apiParams
      * @param string $reason
+     * @param array $guzzleConfig
      *
      * @return Request|AbstractRequest
      *
      * @throws \Exception
      */
-    public static function build(string $apiVersion, array $apiParams, string $reason): Request
+    public static function build(string $apiVersion, array $apiParams, string $reason, array $guzzleConfig = []): Request
     {
         if (static::LEGACY_API === $apiVersion) {
             if (isset($apiParams['serverKey'], $apiParams['senderId'])) {
-                return new LegacyApiRequest($apiParams, $reason);
+                return new LegacyApiRequest($apiParams, $reason, $guzzleConfig);
             }
 
             throw new InvalidArgumentException('apiParams param must be valid according to chosen '.$apiVersion.' version.');
@@ -38,7 +39,7 @@ final class StaticRequestFactory
 
         if (static::API_V1 === $apiVersion) {
             if (isset($apiParams['privateKey'])) {
-                return new ApiV1Request($apiParams, $reason);
+                return new ApiV1Request($apiParams, $reason, $guzzleConfig);
             }
 
             throw new InvalidArgumentException('apiParams param must be valid according to chosen '.$apiVersion.' version.');

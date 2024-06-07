@@ -24,6 +24,9 @@ class Fcm extends Component
     /** @var $oldApiParams array */
     public $apiParams;
 
+    /** @var $guzzleConfig array */
+    public $guzzleConfig = [];
+
     /**
      * @param string $reason A reason to create request for.
      * Can be: for topic management or for message sending (for default).
@@ -37,7 +40,7 @@ class Fcm extends Component
     public function createRequest(string $reason = StaticBuilderFactory::FOR_TOKEN_SENDING): Request
     {
         $this->validateConfigs();
-        $request = StaticRequestFactory::build($this->apiVersion, $this->apiParams, $reason);
+        $request = StaticRequestFactory::build($this->apiVersion, $this->apiParams, $reason, $this->guzzleConfig);
         $request->setResponse(StaticResponseFactory::build($this->apiVersion, $request));
 
         return $request;
@@ -52,7 +55,9 @@ class Fcm extends Component
     private function validateConfigs()
     {
         foreach ((new ReflectionClass($this))->getProperties(ReflectionProperty::IS_PUBLIC) as $param) {
-            if (! $this->{$param->getName()}) {
+            $propertyName  = $param->getName();
+            $propertyValue = $this->{$propertyName};
+            if ($propertyValue === false || $propertyValue === null) {
                 throw new InvalidArgumentException($param->getName().' param must be set.');
             }
         }
